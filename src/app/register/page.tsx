@@ -10,5 +10,12 @@ export default async function RegisterPage() {
     .eq("is_active", true)
     .order("created_at", { ascending: true });
 
-  return <RegisterClient products={(data as Product[]) ?? []} />;
+  const { data: pendingItems } = await supabase
+    .from("order_items")
+    .select("tag_number")
+    .eq("status", "pending");
+
+  const usedTags = [...new Set((pendingItems ?? []).map((i) => i.tag_number as number))];
+
+  return <RegisterClient products={(data as Product[]) ?? []} initialUsedTags={usedTags} />;
 }

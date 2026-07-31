@@ -9,9 +9,12 @@ export type Product = {
   created_at: string;
 };
 
+export const TAG_NUMBERS = Array.from({ length: 20 }, (_, i) => i + 1);
+
 export type Order = {
   id: string;
   order_number: number;
+  tag_number: number;
   total_amount: number;
   payment_method: PaymentMethod;
   created_at: string;
@@ -21,6 +24,7 @@ export type OrderItem = {
   id: string;
   order_id: string;
   order_number: number;
+  tag_number: number;
   product_name: string;
   unit_price: number;
   quantity: number;
