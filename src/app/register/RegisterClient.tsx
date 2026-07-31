@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { PaymentMethod, Product } from "@/types";
-import { PAYMENT_METHOD_LABELS } from "@/types";
+import { useEffect, useMemo, useState } from "react";
+import { getBrowserClient } from "@/lib/supabase";
+import type { OrderItem, PaymentMethod, Product } from "@/types";
+import { PAYMENT_METHOD_LABELS, TAG_NUMBERS } from "@/types";
 
 type CartLine = {
   productId: string;
@@ -11,19 +12,67 @@ type CartLine = {
   quantity: number;
 };
 
-export default function RegisterClient({ products }: { products: Product[] }) {
+export default function RegisterClient({
+  products,
+  initialUsedTags,
+}: {
+  products: Product[];
+  initialUsedTags: number[];
+}) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [tagNumber, setTagNumber] = useState<number | null>(null);
+  const [pendingTagsById, setPendingTagsById] = useState<Map<string, number>>(
+    new Map(initialUsedTags.map((t, i) => [`initial-${i}`, t]))
+  );
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [lastOrderNumber, setLastOrderNumber] = useState<number | null>(null);
+  const [lastTagNumber, setLastTagNumber] = useState<number | null>(null);
+
+  const usedTags = useMemo(() => new Set(pendingTagsById.values()), [pendingTagsById]);
+
+  useEffect(() => {
+    const supabase = getBrowserClient();
+    const channel = supabase
+      .channel("order_items-register")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "order_items" },
+        (payload) => {
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+            const row = payload.new as OrderItem;
+            setPendingTagsById((prev) => {
+              const next = new Map(prev);
+              if (row.status === "pending") {
+                next.set(row.id, row.tag_number);
+              } else {
+                next.delete(row.id);
+              }
+              return next;
+            });
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as OrderItem;
+            setPendingTagsById((prev) => {
+              const next = new Map(prev);
+              next.delete(row.id);
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const lines = useMemo(() => Object.values(cart), [cart]);
   const totalCount = lines.reduce((sum, l) => sum + l.quantity, 0);
   const totalAmount = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
 
   function addToCart(p: Product) {
-    setLastOrderNumber(null);
+    setLastTagNumber(null);
     setCart((prev) => {
       const existing = prev[p.id];
       const quantity = (existing?.quantity ?? 0) + 1;
@@ -49,7 +98,7 @@ export default function RegisterClient({ products }: { products: Product[] }) {
   }
 
   async function checkout() {
-    if (lines.length === 0) return;
+    if (lines.length === 0 || tagNumber === null) return;
     setSubmitting(true);
     setErr(null);
     try {
@@ -58,6 +107,7 @@ export default function RegisterClient({ products }: { products: Product[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           payment_method: paymentMethod,
+          tag_number: tagNumber,
           items: lines.map((l) => ({
             product_name: l.name,
             unit_price: l.unitPrice,
@@ -70,9 +120,10 @@ export default function RegisterClient({ products }: { products: Product[] }) {
         throw new Error(body.error ?? "会計に失敗しました");
       }
       const body = await res.json();
-      setLastOrderNumber(body.order?.order_number ?? null);
+      setLastTagNumber(body.order?.tag_number ?? null);
       setCart({});
       setPaymentMethod("cash");
+      setTagNumber(null);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "会計に失敗しました");
     } finally {
@@ -146,6 +197,33 @@ export default function RegisterClient({ products }: { products: Product[] }) {
         </div>
 
         <div className="flex flex-col gap-1">
+          <span className="text-sm font-medium">札番号</span>
+          <div className="grid grid-cols-5 gap-1">
+            {TAG_NUMBERS.map((n) => {
+              const disabled = usedTags.has(n) && tagNumber !== n;
+              const selected = tagNumber === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setTagNumber(n)}
+                  disabled={disabled}
+                  className={`rounded-lg border py-2 text-sm font-semibold tabular-nums ${
+                    selected
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : disabled
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        : "bg-white hover:border-slate-400"
+                  }`}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">支払い方法</span>
           <div className="flex flex-col gap-1">
             {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => (
@@ -164,16 +242,16 @@ export default function RegisterClient({ products }: { products: Product[] }) {
 
         <button
           onClick={checkout}
-          disabled={lines.length === 0 || submitting}
+          disabled={lines.length === 0 || tagNumber === null || submitting}
           className="bg-slate-900 text-white rounded-lg py-3 font-semibold disabled:opacity-50"
         >
           {submitting ? "処理中..." : "会計確定"}
         </button>
 
         {err && <div className="text-rose-700 text-sm">{err}</div>}
-        {lastOrderNumber !== null && (
+        {lastTagNumber !== null && (
           <div className="text-emerald-700 text-sm bg-emerald-50 rounded p-2">
-            注文 #{lastOrderNumber} を厨房に送信しました
+            札 {lastTagNumber} 番の注文を厨房に送信しました
           </div>
         )}
       </section>

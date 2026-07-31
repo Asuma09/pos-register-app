@@ -40,9 +40,9 @@ export default function KitchenClient({ initialItems }: { initialItems: OrderIte
   const grouped = useMemo(() => {
     const map = new Map<number, OrderItem[]>();
     for (const item of items) {
-      const list = map.get(item.order_number) ?? [];
+      const list = map.get(item.tag_number) ?? [];
       list.push(item);
-      map.set(item.order_number, list);
+      map.set(item.tag_number, list);
     }
     return [...map.entries()].sort((a, b) => a[0] - b[0]);
   }, [items]);
@@ -57,9 +57,11 @@ export default function KitchenClient({ initialItems }: { initialItems: OrderIte
   return (
     <main className="mx-auto max-w-6xl p-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {grouped.map(([orderNumber, orderItems]) => (
-          <div key={orderNumber} className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
-            <div className="font-bold text-lg">注文 #{orderNumber}</div>
+        {grouped.map(([tagNumber, orderItems]) => (
+          <div key={tagNumber} className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
+            <div className="text-center">
+              <span className="text-5xl font-black tabular-nums">{tagNumber}</span>
+            </div>
             <div className="flex flex-col gap-2">
               {orderItems.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-2 border-b pb-2">

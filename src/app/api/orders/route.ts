@@ -7,7 +7,7 @@ type OrderItemInput = { product_name?: string; unit_price?: number; quantity?: n
 const VALID_PAYMENT_METHODS: PaymentMethod[] = ["cash", "credit_card", "e_money"];
 
 export async function POST(req: Request) {
-  let body: { payment_method?: string; items?: OrderItemInput[] };
+  let body: { payment_method?: string; tag_number?: number; items?: OrderItemInput[] };
   try {
     body = await req.json();
   } catch {
@@ -17,6 +17,11 @@ export async function POST(req: Request) {
   const paymentMethod = body.payment_method as PaymentMethod;
   if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
     return NextResponse.json({ error: "支払い方法が不正です" }, { status: 400 });
+  }
+
+  const tagNumber = Number(body.tag_number);
+  if (!Number.isInteger(tagNumber) || tagNumber < 1 || tagNumber > 20) {
+    return NextResponse.json({ error: "札番号が不正です" }, { status: 400 });
   }
 
   const items = (body.items ?? [])
@@ -34,16 +39,35 @@ export async function POST(req: Request) {
   const totalAmount = items.reduce((sum, i) => sum + i.unit_price * i.quantity, 0);
 
   const supabase = getServerClient();
+
+  const { data: inUse, error: inUseError } = await supabase
+    .from("order_items")
+    .select("id")
+    .eq("tag_number", tagNumber)
+    .eq("status", "pending")
+    .limit(1);
+  if (inUseError) return NextResponse.json({ error: inUseError.message }, { status: 400 });
+  if (inUse && inUse.length > 0) {
+    return NextResponse.json({ error: "この札は使用中です" }, { status: 409 });
+  }
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .insert({ payment_method: paymentMethod, total_amount: totalAmount })
+    .insert({ payment_method: paymentMethod, total_amount: totalAmount, tag_number: tagNumber })
     .select()
     .single();
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 400 });
 
   const { error: itemsError } = await supabase
     .from("order_items")
-    .insert(items.map((i) => ({ ...i, order_id: order.id, order_number: order.order_number })));
+    .insert(
+      items.map((i) => ({
+        ...i,
+        order_id: order.id,
+        order_number: order.order_number,
+        tag_number: tagNumber,
+      }))
+    );
   if (itemsError) return NextResponse.json({ error: itemsError.message }, { status: 400 });
 
   return NextResponse.json({ order });
