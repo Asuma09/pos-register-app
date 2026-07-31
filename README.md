@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 会計アプリ
 
-## Getting Started
+Airレジを参考にした、レジ・厨房・商品管理の3画面からなる会計アプリ。レジ担当と厨房が離れていても、注文がリアルタイムで届く。
 
-First, run the development server:
+## 画面構成
+
+- `/register` レジ（会計担当）: 商品選択・カート数量変更・合計表示・支払い方法選択・会計確定
+- `/kitchen` 厨房（スタッフ）: 未提供の注文品一覧（リアルタイム更新）・提供可にするボタン
+- `/admin` 商品管理: 商品の追加（価格設定込み）・削除
+
+すべての画面は共通のスタッフパスワードで保護されている（`/login`）。
+
+## セットアップ
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local` に以下を設定する（新規作成済み）:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabaseプロジェクト（`pos-register-app`）の接続情報
+- `STAFF_PASSWORD`: 各画面ログイン用の共通パスワード（本番運用前に変更すること）
+- `STAFF_COOKIE_SECRET`: セッションCookie署名用のランダム文字列（本番運用前に変更すること）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 想定運用
 
-## Learn More
+- レジ: PCまたはタブレットのブラウザで `/register` を開く
+- 厨房: スマホまたはモニターのブラウザで `/kitchen` を開く（会計確定と同時に注文が自動で届く）
+- 管理: 事前に `/admin` で商品と価格を登録しておく
 
-To learn more about Next.js, take a look at the following resources:
+## 既知の制約
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 支払い方法（現金/クレジットカード/電子マネー）は記録のみで、実際の決済処理は行わない
+- パスワード保護はアプリ層（Cookie）のみ。Supabaseの匿名キーはブラウザに公開されるため、機微な用途には不向き（小規模イベント・屋台向けの簡易構成）
