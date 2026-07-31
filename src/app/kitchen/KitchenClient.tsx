@@ -47,7 +47,8 @@ export default function KitchenClient({ initialItems }: { initialItems: OrderIte
     return [...map.entries()].sort((a, b) => a[0] - b[0]);
   }, [items]);
 
-  async function markReady(id: string) {
+  async function markReady(id: string, productName: string) {
+    if (!confirm(`「${productName}」を提供可にしますか？`)) return;
     setItems((prev) => prev.filter((i) => i.id !== id));
     const supabase = getBrowserClient();
     await supabase.from("order_items").update({ status: "ready" }).eq("id", id);
@@ -67,7 +68,7 @@ export default function KitchenClient({ initialItems }: { initialItems: OrderIte
                     <div className="text-xs text-slate-500 tabular-nums">x{item.quantity}</div>
                   </div>
                   <button
-                    onClick={() => markReady(item.id)}
+                    onClick={() => markReady(item.id, item.product_name)}
                     className="bg-emerald-600 text-white text-sm rounded-lg px-3 py-2 font-semibold hover:bg-emerald-700"
                   >
                     提供可にする
