@@ -12,10 +12,13 @@ export default async function RegisterPage() {
 
   const { data: pendingItems } = await supabase
     .from("order_items")
-    .select("tag_number")
+    .select("id, tag_number")
     .eq("status", "pending");
 
-  const usedTags = [...new Set((pendingItems ?? []).map((i) => i.tag_number as number))];
-
-  return <RegisterClient products={(data as Product[]) ?? []} initialUsedTags={usedTags} />;
+  return (
+    <RegisterClient
+      products={(data as Product[]) ?? []}
+      initialPendingItems={pendingItems ?? []}
+    />
+  );
 }

@@ -16,17 +16,17 @@ const QUICK_CASH_AMOUNTS = [1000, 5000, 10000];
 
 export default function RegisterClient({
   products,
-  initialUsedTags,
+  initialPendingItems,
 }: {
   products: Product[];
-  initialUsedTags: number[];
+  initialPendingItems: { id: string; tag_number: number }[];
 }) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [tagNumber, setTagNumber] = useState<number | null>(null);
   const [receivedAmount, setReceivedAmount] = useState<number | null>(null);
   const [pendingTagsById, setPendingTagsById] = useState<Map<string, number>>(
-    new Map(initialUsedTags.map((t, i) => [`initial-${i}`, t]))
+    new Map(initialPendingItems.map((i) => [i.id, i.tag_number]))
   );
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
