@@ -79,6 +79,7 @@ export default function ProductManager({ initialProducts }: { initialProducts: P
             type="number"
             inputMode="numeric"
             min={0}
+            step={100}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             className="border rounded px-3 py-2 text-sm"
