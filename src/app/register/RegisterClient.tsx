@@ -46,10 +46,12 @@ export default function RegisterClient({
             const row = payload.new as OrderItem;
             setPendingTagsById((prev) => {
               const next = new Map(prev);
-              if (row.status === "pending") {
-                next.set(row.id, row.tag_number);
-              } else {
+              // A tag stays reserved while its item is "pending" or "ready" —
+              // it's only freed once the item has been handed over ("served").
+              if (row.status === "served") {
                 next.delete(row.id);
+              } else {
+                next.set(row.id, row.tag_number);
               }
               return next;
             });

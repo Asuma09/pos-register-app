@@ -16,10 +16,12 @@ export default async function RegisterPage() {
     .eq("is_active", true)
     .order("created_at", { ascending: true });
 
+  // A tag stays reserved until its items are handed over at the pickup
+  // counter ("served"), not just when the kitchen marks them "ready".
   const { data: pendingItems } = await supabase
     .from("order_items")
     .select("id, tag_number")
-    .eq("status", "pending");
+    .neq("status", "served");
 
   return (
     <RegisterClient

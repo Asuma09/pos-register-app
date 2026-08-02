@@ -1,5 +1,5 @@
 export type PaymentMethod = "cash" | "credit_card" | "e_money";
-export type OrderItemStatus = "pending" | "ready";
+export type OrderItemStatus = "pending" | "ready" | "served";
 
 export type Product = {
   id: string;

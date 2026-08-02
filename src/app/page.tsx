@@ -4,6 +4,7 @@ import LogoutButton from "@/components/LogoutButton";
 const SCREENS = [
   { href: "/register", label: "レジ", desc: "商品選択・会計" },
   { href: "/kitchen", label: "厨房", desc: "注文一覧・提供可にする" },
+  { href: "/pickup", label: "受け渡し", desc: "番号札単位で提供する" },
   { href: "/admin", label: "商品管理", desc: "商品の追加・削除" },
 ];
 
