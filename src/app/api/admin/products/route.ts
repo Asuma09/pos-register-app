@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerClient } from "@/lib/supabase";
 
+// GET has no request-time API usage, so Next.js could otherwise cache this
+// route handler's response (Full Route Cache) and keep serving a stale
+// product list after mutations. Force it to run fresh on every request.
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const supabase = getServerClient();
   const { data, error } = await supabase

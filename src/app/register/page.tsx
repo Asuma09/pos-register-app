@@ -2,6 +2,12 @@ import { getServerClient } from "@/lib/supabase";
 import type { Product } from "@/types";
 import RegisterClient from "./RegisterClient";
 
+// This page reads live product/order state from Supabase on every request.
+// Without this, Next.js may statically prerender the page (Full Route Cache)
+// since no request-time API is used, causing newly added products or
+// order/tag state to never show up until a redeploy.
+export const dynamic = "force-dynamic";
+
 export default async function RegisterPage() {
   const supabase = getServerClient();
   const { data } = await supabase
