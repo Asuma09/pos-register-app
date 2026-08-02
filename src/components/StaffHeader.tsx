@@ -10,6 +10,7 @@ export default function StaffHeader({ title }: { title: string }) {
           <nav className="flex gap-3 text-sm text-slate-600">
             <Link href="/register" className="hover:text-slate-900">レジ</Link>
             <Link href="/kitchen" className="hover:text-slate-900">厨房</Link>
+            <Link href="/pickup" className="hover:text-slate-900">受け渡し</Link>
             <Link href="/admin" className="hover:text-slate-900">商品管理</Link>
           </nav>
         </div>
