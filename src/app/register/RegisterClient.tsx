@@ -254,6 +254,7 @@ export default function RegisterClient({
                 type="number"
                 inputMode="numeric"
                 min={0}
+                step={100}
                 value={receivedAmount ?? ""}
                 onChange={(e) => {
                   const v = e.target.value;
