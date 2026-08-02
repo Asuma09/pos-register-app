@@ -40,11 +40,13 @@ export async function POST(req: Request) {
 
   const supabase = getServerClient();
 
+  // A tag is in use until its items are handed over at pickup ("served"),
+  // not just while the kitchen is still preparing them.
   const { data: inUse, error: inUseError } = await supabase
     .from("order_items")
     .select("id")
     .eq("tag_number", tagNumber)
-    .eq("status", "pending")
+    .neq("status", "served")
     .limit(1);
   if (inUseError) return NextResponse.json({ error: inUseError.message }, { status: 400 });
   if (inUse && inUse.length > 0) {
