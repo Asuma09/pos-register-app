@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerClient } from "@/lib/supabase";
-import type { PaymentMethod } from "@/types";
 
 type OrderItemInput = { product_name?: string; unit_price?: number; quantity?: number };
 
-const VALID_PAYMENT_METHODS: PaymentMethod[] = ["cash", "credit_card", "e_money"];
-
 export async function POST(req: Request) {
-  let body: { payment_method?: string; tag_number?: number; items?: OrderItemInput[] };
+  let body: { tag_number?: number; items?: OrderItemInput[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
-  }
-
-  const paymentMethod = body.payment_method as PaymentMethod;
-  if (!VALID_PAYMENT_METHODS.includes(paymentMethod)) {
-    return NextResponse.json({ error: "支払い方法が不正です" }, { status: 400 });
   }
 
   const tagNumber = Number(body.tag_number);
@@ -55,7 +47,7 @@ export async function POST(req: Request) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .insert({ payment_method: paymentMethod, total_amount: totalAmount, tag_number: tagNumber })
+    .insert({ payment_method: "cash", total_amount: totalAmount, tag_number: tagNumber })
     .select()
     .single();
   if (orderError) return NextResponse.json({ error: orderError.message }, { status: 400 });

@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase";
-import type { OrderItem, PaymentMethod, Product } from "@/types";
-import { PAYMENT_METHOD_LABELS, TAG_NUMBERS } from "@/types";
+import type { OrderItem, Product } from "@/types";
+import { TAG_NUMBERS } from "@/types";
 
 type CartLine = {
   productId: string;
@@ -22,7 +22,6 @@ export default function RegisterClient({
   initialPendingItems: { id: string; tag_number: number }[];
 }) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [tagNumber, setTagNumber] = useState<number | null>(null);
   const [receivedAmount, setReceivedAmount] = useState<number | null>(null);
   const [pendingTagsById, setPendingTagsById] = useState<Map<string, number>>(
@@ -76,7 +75,7 @@ export default function RegisterClient({
   const totalCount = lines.reduce((sum, l) => sum + l.quantity, 0);
   const totalAmount = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const changeAmount = receivedAmount !== null ? receivedAmount - totalAmount : null;
-  const cashShortfall = paymentMethod === "cash" && (receivedAmount === null || receivedAmount < totalAmount);
+  const cashShortfall = receivedAmount === null || receivedAmount < totalAmount;
 
   function addToCart(p: Product) {
     setLastTagNumber(null);
@@ -125,7 +124,7 @@ export default function RegisterClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          payment_method: paymentMethod,
+          payment_method: "cash",
           tag_number: tagNumber,
           items: lines.map((l) => ({
             product_name: l.name,
@@ -141,7 +140,6 @@ export default function RegisterClient({
       const body = await res.json();
       setLastTagNumber(body.order?.tag_number ?? null);
       setCart({});
-      setPaymentMethod("cash");
       setTagNumber(null);
       setReceivedAmount(null);
     } catch (e) {
@@ -239,72 +237,53 @@ export default function RegisterClient({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">支払い方法</span>
-          <div className="flex flex-col gap-1">
-            {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((m) => (
-              <label key={m} className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="payment_method"
-                  checked={paymentMethod === m}
-                  onChange={() => setPaymentMethod(m)}
-                />
-                {PAYMENT_METHOD_LABELS[m]}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {paymentMethod === "cash" && (
-          <div className="flex flex-col gap-2 rounded-lg border bg-slate-50 p-3">
-            <label className="flex items-center justify-between gap-2 text-sm">
-              <span className="font-medium">お預かり</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={100}
-                value={receivedAmount ?? ""}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setReceivedAmount(v === "" ? null : Number(v));
-                }}
-                className="w-32 border rounded-lg px-2 py-1 text-right tabular-nums"
-                placeholder="0"
-              />
-            </label>
-            <div className="flex gap-1">
-              {QUICK_CASH_AMOUNTS.map((amount) => (
-                <button
-                  key={amount}
-                  type="button"
-                  onClick={() => setReceivedAmount(amount)}
-                  className="flex-1 rounded border bg-white py-1 text-xs hover:border-slate-400"
-                >
-                  ¥{amount.toLocaleString()}
-                </button>
-              ))}
+        <div className="flex flex-col gap-2 rounded-lg border bg-slate-50 p-3">
+          <label className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-medium">お預かり</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={100}
+              value={receivedAmount ?? ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                setReceivedAmount(v === "" ? null : Number(v));
+              }}
+              className="w-32 border rounded-lg px-2 py-1 text-right tabular-nums"
+              placeholder="0"
+            />
+          </label>
+          <div className="flex gap-1">
+            {QUICK_CASH_AMOUNTS.map((amount) => (
               <button
+                key={amount}
                 type="button"
-                onClick={() => setReceivedAmount(totalAmount)}
+                onClick={() => setReceivedAmount(amount)}
                 className="flex-1 rounded border bg-white py-1 text-xs hover:border-slate-400"
               >
-                ぴったり
+                ¥{amount.toLocaleString()}
               </button>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-600">お釣り</span>
-              {changeAmount !== null && changeAmount >= 0 ? (
-                <span className="font-bold tabular-nums">¥{changeAmount.toLocaleString()}</span>
-              ) : (
-                <span className="text-rose-700 tabular-nums">
-                  {changeAmount !== null ? `¥${Math.abs(changeAmount).toLocaleString()} 不足` : "-"}
-                </span>
-              )}
-            </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setReceivedAmount(totalAmount)}
+              className="flex-1 rounded border bg-white py-1 text-xs hover:border-slate-400"
+            >
+              ぴったり
+            </button>
           </div>
-        )}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-600">お釣り</span>
+            {changeAmount !== null && changeAmount >= 0 ? (
+              <span className="font-bold tabular-nums">¥{changeAmount.toLocaleString()}</span>
+            ) : (
+              <span className="text-rose-700 tabular-nums">
+                {changeAmount !== null ? `¥${Math.abs(changeAmount).toLocaleString()} 不足` : "-"}
+              </span>
+            )}
+          </div>
+        </div>
 
         <button
           onClick={checkout}
