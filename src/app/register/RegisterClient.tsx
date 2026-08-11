@@ -115,6 +115,28 @@ export default function RegisterClient({
     });
   }
 
+  function pressReceivedDigit(digits: string) {
+    setReceivedAmount((prev) => {
+      const current = prev === null ? "" : String(prev);
+      const next = (current + digits).replace(/^0+(?=\d)/, "");
+      // Cap length to avoid runaway taps producing an unusable number.
+      if (next.length > 9) return prev;
+      return next === "" ? null : Number(next);
+    });
+  }
+
+  function backspaceReceived() {
+    setReceivedAmount((prev) => {
+      if (prev === null) return null;
+      const next = String(prev).slice(0, -1);
+      return next === "" ? null : Number(next);
+    });
+  }
+
+  function clearReceived() {
+    setReceivedAmount(null);
+  }
+
   async function checkout() {
     if (lines.length === 0 || tagNumber === null || cashShortfall) return;
     setSubmitting(true);
@@ -238,22 +260,57 @@ export default function RegisterClient({
         </div>
 
         <div className="flex flex-col gap-2 rounded-lg border bg-slate-50 p-3">
-          <label className="flex items-center justify-between gap-2 text-sm">
+          <div className="flex items-center justify-between gap-2 text-sm">
             <span className="font-medium">お預かり</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={100}
-              value={receivedAmount ?? ""}
-              onChange={(e) => {
-                const v = e.target.value;
-                setReceivedAmount(v === "" ? null : Number(v));
-              }}
-              className="w-32 border rounded-lg px-2 py-1 text-right tabular-nums"
-              placeholder="0"
-            />
-          </label>
+            <div className="flex items-center gap-1">
+              <span className="text-lg font-bold tabular-nums">
+                ¥{(receivedAmount ?? 0).toLocaleString()}
+              </span>
+              <button
+                type="button"
+                onClick={backspaceReceived}
+                aria-label="お預かり金額を1桁削除"
+                className="w-8 h-8 rounded border bg-white text-slate-500 hover:border-slate-400"
+              >
+                ⌫
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1">
+            {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => pressReceivedDigit(String(n))}
+                className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearReceived}
+              className="rounded-lg border bg-white py-2 text-sm font-semibold text-rose-600 hover:border-rose-400 active:scale-[0.98] transition"
+            >
+              C
+            </button>
+            <button
+              type="button"
+              onClick={() => pressReceivedDigit("0")}
+              className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => pressReceivedDigit("00")}
+              className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+            >
+              00
+            </button>
+          </div>
+
           <div className="flex gap-1">
             {QUICK_CASH_AMOUNTS.map((amount) => (
               <button
