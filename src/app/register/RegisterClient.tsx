@@ -90,17 +90,29 @@ export default function RegisterClient({
     });
   }
 
-  function changeQuantity(productId: string, delta: number) {
+  function setLineQuantity(productId: string, raw: string) {
     setCart((prev) => {
       const existing = prev[productId];
-      if (!existing) return prev;
-      const quantity = existing.quantity + delta;
-      if (quantity <= 0) {
-        const next = { ...prev };
-        delete next[productId];
-        return next;
-      }
+      if (!existing || raw === "") return prev;
+      const quantity = Math.max(1, Math.floor(Number(raw)) || 1);
       return { ...prev, [productId]: { ...existing, quantity } };
+    });
+  }
+
+  function setLineUnitPrice(productId: string, raw: string) {
+    setCart((prev) => {
+      const existing = prev[productId];
+      if (!existing || raw === "") return prev;
+      const unitPrice = Math.max(0, Math.floor(Number(raw)) || 0);
+      return { ...prev, [productId]: { ...existing, unitPrice } };
+    });
+  }
+
+  function removeLine(productId: string) {
+    setCart((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
     });
   }
 
@@ -141,52 +153,48 @@ export default function RegisterClient({
 
   return (
     <main className="mx-auto max-w-6xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <section className="md:col-span-2">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {products.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => addToCart(p)}
-              className="rounded-xl border bg-white shadow-sm p-4 text-left hover:border-slate-400 active:scale-[0.98] transition"
-            >
-              <div className="font-semibold">{p.name}</div>
-              <div className="text-slate-600 tabular-nums">¥{p.price.toLocaleString()}</div>
-            </button>
-          ))}
-          {products.length === 0 && (
-            <div className="col-span-full text-center text-slate-500 p-8">
-              商品が登録されていません。商品管理画面から追加してください。
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3 h-fit sticky top-16">
+      <section className="order-2 md:order-1 rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3 h-fit md:sticky md:top-16">
         <h2 className="font-bold">カート</h2>
 
         <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">
           {lines.map((l) => (
-            <div key={l.productId} className="flex items-center justify-between gap-2 border-b pb-2">
-              <div className="flex-1 min-w-0">
+            <div key={l.productId} className="flex flex-col gap-1 border-b pb-2">
+              <div className="flex items-center justify-between gap-2">
                 <div className="font-medium truncate">{l.name}</div>
-                <div className="text-xs text-slate-500 tabular-nums">
-                  ¥{l.unitPrice.toLocaleString()} x {l.quantity}
-                </div>
+                <button
+                  onClick={() => removeLine(l.productId)}
+                  aria-label={`${l.name}をカートから削除`}
+                  className="shrink-0 w-6 h-6 rounded text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                >
+                  ×
+                </button>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => changeQuantity(l.productId, -1)}
-                  className="w-7 h-7 rounded border hover:bg-slate-100"
-                >
-                  −
-                </button>
-                <span className="w-5 text-center tabular-nums">{l.quantity}</span>
-                <button
-                  onClick={() => changeQuantity(l.productId, 1)}
-                  className="w-7 h-7 rounded border hover:bg-slate-100"
-                >
-                  +
-                </button>
+              <div className="flex items-center gap-1 text-sm">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  value={l.quantity}
+                  onChange={(e) => setLineQuantity(l.productId, e.target.value)}
+                  aria-label={`${l.name}の数量`}
+                  className="w-14 border rounded px-1 py-1 text-center tabular-nums"
+                />
+                <span className="text-slate-400">個 ×</span>
+                <span className="text-slate-500">¥</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={100}
+                  value={l.unitPrice}
+                  onChange={(e) => setLineUnitPrice(l.productId, e.target.value)}
+                  aria-label={`${l.name}の単価`}
+                  className="w-20 border rounded px-1 py-1 text-right tabular-nums"
+                />
+                <span className="ml-auto font-semibold tabular-nums">
+                  ¥{(l.unitPrice * l.quantity).toLocaleString()}
+                </span>
               </div>
             </div>
           ))}
@@ -312,6 +320,26 @@ export default function RegisterClient({
             札 {lastTagNumber} 番の注文を厨房に送信しました
           </div>
         )}
+      </section>
+
+      <section className="order-1 md:order-2 md:col-span-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {products.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => addToCart(p)}
+              className="rounded-xl border bg-white shadow-sm p-4 text-left hover:border-slate-400 active:scale-[0.98] transition"
+            >
+              <div className="font-semibold">{p.name}</div>
+              <div className="text-slate-600 tabular-nums">¥{p.price.toLocaleString()}</div>
+            </button>
+          ))}
+          {products.length === 0 && (
+            <div className="col-span-full text-center text-slate-500 p-8">
+              商品が登録されていません。商品管理画面から追加してください。
+            </div>
+          )}
+        </div>
       </section>
     </main>
   );
