@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase";
 import type { OrderItem } from "@/types";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function PickupClient({ initialItems }: { initialItems: OrderItem[] }) {
   const [items, setItems] = useState<OrderItem[]>(initialItems);
+  const [confirmingServe, setConfirmingServe] = useState<{
+    tagNumber: number;
+    itemIds: string[];
+  } | null>(null);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -52,8 +57,14 @@ export default function PickupClient({ initialItems }: { initialItems: OrderItem
       .sort((a, b) => a[0] - b[0]);
   }, [items]);
 
-  async function markServed(tagNumber: number, itemIds: string[]) {
-    if (!confirm(`札 ${tagNumber} 番を提供済みにしますか？`)) return;
+  function requestMarkServed(tagNumber: number, itemIds: string[]) {
+    setConfirmingServe({ tagNumber, itemIds });
+  }
+
+  async function confirmMarkServed() {
+    if (!confirmingServe) return;
+    const { itemIds } = confirmingServe;
+    setConfirmingServe(null);
     setItems((prev) => prev.filter((i) => !itemIds.includes(i.id)));
     const supabase = getBrowserClient();
     await supabase.from("order_items").update({ status: "served" }).in("id", itemIds);
@@ -95,7 +106,7 @@ export default function PickupClient({ initialItems }: { initialItems: OrderItem
                 ))}
               </div>
               <button
-                onClick={() => markServed(tagNumber, itemIds)}
+                onClick={() => requestMarkServed(tagNumber, itemIds)}
                 disabled={!allReady}
                 className="bg-emerald-600 text-white text-sm rounded-lg px-3 py-3 font-semibold hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -110,6 +121,13 @@ export default function PickupClient({ initialItems }: { initialItems: OrderItem
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={confirmingServe !== null}
+        message={confirmingServe ? `札 ${confirmingServe.tagNumber} 番を提供済みにしますか？` : ""}
+        confirmLabel="提供済みにする"
+        onConfirm={confirmMarkServed}
+        onCancel={() => setConfirmingServe(null)}
+      />
     </main>
   );
 }
