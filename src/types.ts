@@ -1,4 +1,4 @@
-export type PaymentMethod = "cash" | "credit_card" | "e_money";
+export type PaymentMethod = "cash";
 export type OrderItemStatus = "pending" | "ready" | "served";
 
 export type Product = {
@@ -34,6 +34,4 @@ export type OrderItem = {
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   cash: "現金",
-  credit_card: "クレジットカード",
-  e_money: "電子マネー / QR決済",
 };
