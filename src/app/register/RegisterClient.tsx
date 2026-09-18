@@ -172,11 +172,120 @@ export default function RegisterClient({
   }
 
   return (
-    <main className="mx-auto max-w-6xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <section className="order-2 md:order-1 rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3 h-fit md:sticky md:top-16">
+    <main className="mx-auto max-w-6xl p-4 flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        {/* 商品: 左上・少し小さめ */}
+        <section className="md:col-span-5">
+          <h2 className="font-bold mb-2">商品</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {products.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => addToCart(p)}
+                className="rounded-lg border bg-white shadow-sm p-3 text-left hover:border-slate-400 active:scale-[0.98] transition"
+              >
+                <div className="font-semibold text-sm">{p.name}</div>
+                <div className="text-slate-600 text-sm tabular-nums">¥{p.price.toLocaleString()}</div>
+              </button>
+            ))}
+            {products.length === 0 && (
+              <div className="col-span-full text-center text-slate-500 p-8 text-sm">
+                商品が登録されていません。商品管理画面から追加してください。
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* お預かりテンキー: 右・少し大きめ(押し間違い防止) */}
+        <section className="md:col-span-7 rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-lg">お預かり</span>
+            <div className="flex items-center gap-2">
+              <span className="text-3xl font-bold tabular-nums">
+                ¥{(receivedAmount ?? 0).toLocaleString()}
+              </span>
+              <button
+                type="button"
+                onClick={backspaceReceived}
+                aria-label="お預かり金額を1桁削除"
+                className="w-12 h-12 rounded-lg border bg-white text-slate-500 text-xl hover:border-slate-400"
+              >
+                ⌫
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => pressReceivedDigit(String(n))}
+                className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearReceived}
+              className="rounded-lg border bg-white py-5 text-xl font-semibold text-rose-600 hover:border-rose-400 active:scale-[0.98] transition"
+            >
+              C
+            </button>
+            <button
+              type="button"
+              onClick={() => pressReceivedDigit("0")}
+              className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => pressReceivedDigit("00")}
+              className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+            >
+              00
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            {QUICK_CASH_AMOUNTS.map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => setReceivedAmount(amount)}
+                className="flex-1 rounded-lg border bg-white py-2 text-sm hover:border-slate-400"
+              >
+                ¥{amount.toLocaleString()}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setReceivedAmount(totalAmount)}
+              className="flex-1 rounded-lg border bg-white py-2 text-sm hover:border-slate-400"
+            >
+              ぴったり
+            </button>
+          </div>
+          <div className="flex items-center justify-between text-base">
+            <span className="text-slate-600">お釣り</span>
+            {changeAmount !== null && changeAmount >= 0 ? (
+              <span className="font-bold text-xl tabular-nums">¥{changeAmount.toLocaleString()}</span>
+            ) : (
+              <span className="text-rose-700 font-bold text-xl tabular-nums">
+                {changeAmount !== null ? `¥${Math.abs(changeAmount).toLocaleString()} 不足` : "-"}
+              </span>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* カート明細・札番号・会計確定: 下段に全幅で表示 */}
+      <section className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
         <h2 className="font-bold">カート</h2>
 
-        <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto">
+        <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
           {lines.map((l) => (
             <div key={l.productId} className="flex flex-col gap-1 border-b pb-2">
               <div className="flex items-center justify-between gap-2">
@@ -234,7 +343,7 @@ export default function RegisterClient({
 
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium">札番号</span>
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
             {TAG_NUMBERS.map((n) => {
               const disabled = usedTags.has(n) && tagNumber !== n;
               const selected = tagNumber === n;
@@ -259,89 +368,6 @@ export default function RegisterClient({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 rounded-lg border bg-slate-50 p-3">
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-medium">お預かり</span>
-            <div className="flex items-center gap-1">
-              <span className="text-lg font-bold tabular-nums">
-                ¥{(receivedAmount ?? 0).toLocaleString()}
-              </span>
-              <button
-                type="button"
-                onClick={backspaceReceived}
-                aria-label="お預かり金額を1桁削除"
-                className="w-8 h-8 rounded border bg-white text-slate-500 hover:border-slate-400"
-              >
-                ⌫
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-1">
-            {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => pressReceivedDigit(String(n))}
-                className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
-              >
-                {n}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={clearReceived}
-              className="rounded-lg border bg-white py-2 text-sm font-semibold text-rose-600 hover:border-rose-400 active:scale-[0.98] transition"
-            >
-              C
-            </button>
-            <button
-              type="button"
-              onClick={() => pressReceivedDigit("0")}
-              className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              onClick={() => pressReceivedDigit("00")}
-              className="rounded-lg border bg-white py-2 text-base font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
-            >
-              00
-            </button>
-          </div>
-
-          <div className="flex gap-1">
-            {QUICK_CASH_AMOUNTS.map((amount) => (
-              <button
-                key={amount}
-                type="button"
-                onClick={() => setReceivedAmount(amount)}
-                className="flex-1 rounded border bg-white py-1 text-xs hover:border-slate-400"
-              >
-                ¥{amount.toLocaleString()}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setReceivedAmount(totalAmount)}
-              className="flex-1 rounded border bg-white py-1 text-xs hover:border-slate-400"
-            >
-              ぴったり
-            </button>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-600">お釣り</span>
-            {changeAmount !== null && changeAmount >= 0 ? (
-              <span className="font-bold tabular-nums">¥{changeAmount.toLocaleString()}</span>
-            ) : (
-              <span className="text-rose-700 tabular-nums">
-                {changeAmount !== null ? `¥${Math.abs(changeAmount).toLocaleString()} 不足` : "-"}
-              </span>
-            )}
-          </div>
-        </div>
-
         <button
           onClick={checkout}
           disabled={lines.length === 0 || tagNumber === null || cashShortfall || submitting}
@@ -356,26 +382,6 @@ export default function RegisterClient({
             札 {lastTagNumber} 番の注文を厨房に送信しました
           </div>
         )}
-      </section>
-
-      <section className="order-1 md:order-2 md:col-span-2">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {products.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => addToCart(p)}
-              className="rounded-xl border bg-white shadow-sm p-4 text-left hover:border-slate-400 active:scale-[0.98] transition"
-            >
-              <div className="font-semibold">{p.name}</div>
-              <div className="text-slate-600 tabular-nums">¥{p.price.toLocaleString()}</div>
-            </button>
-          ))}
-          {products.length === 0 && (
-            <div className="col-span-full text-center text-slate-500 p-8">
-              商品が登録されていません。商品管理画面から追加してください。
-            </div>
-          )}
-        </div>
       </section>
     </main>
   );
