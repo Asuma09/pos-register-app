@@ -1,5 +1,4 @@
 import Link from "next/link";
-import LogoutButton from "@/components/LogoutButton";
 
 const SCREENS = [
   { href: "/register", label: "レジ", desc: "商品選択・会計" },
@@ -11,10 +10,7 @@ const SCREENS = [
 export default function Home() {
   return (
     <main className="mx-auto max-w-md p-6 mt-16 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">会計アプリ</h1>
-        <LogoutButton />
-      </div>
+      <h1 className="text-xl font-bold">会計アプリ</h1>
       <div className="flex flex-col gap-3">
         {SCREENS.map((s) => (
           <Link
