@@ -7,9 +7,9 @@ const LINKS = [
 
 export default function RegisterLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-dvh md:h-dvh bg-slate-50 md:overflow-hidden">
       <StaffHeader title="レジ" links={LINKS} />
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 md:min-h-0">{children}</div>
     </div>
   );
 }
