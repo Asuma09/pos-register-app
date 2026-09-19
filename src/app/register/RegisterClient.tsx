@@ -172,20 +172,20 @@ export default function RegisterClient({
   }
 
   return (
-    <main className="mx-auto max-w-6xl p-4 flex flex-col gap-4">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+    <main className="mx-auto max-w-6xl md:h-full p-3 flex flex-col gap-2 md:overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:flex-1 md:min-h-0">
         {/* 商品: 左上・少し小さめ */}
-        <section className="md:col-span-5">
-          <h2 className="font-bold mb-2">商品</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <section className="md:col-span-5 md:min-h-0 md:overflow-y-auto">
+          <h2 className="font-bold mb-1 text-sm">商品</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
             {products.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addToCart(p)}
-                className="rounded-lg border bg-white shadow-sm p-3 text-left hover:border-slate-400 active:scale-[0.98] transition"
+                className="rounded-lg border bg-white shadow-sm p-2 text-left hover:border-slate-400 active:scale-[0.98] transition"
               >
                 <div className="font-semibold text-sm">{p.name}</div>
-                <div className="text-slate-600 text-sm tabular-nums">¥{p.price.toLocaleString()}</div>
+                <div className="text-slate-600 text-xs tabular-nums">¥{p.price.toLocaleString()}</div>
               </button>
             ))}
             {products.length === 0 && (
@@ -197,7 +197,7 @@ export default function RegisterClient({
         </section>
 
         {/* お預かりテンキー: 右・少し大きめ(押し間違い防止) */}
-        <section className="md:col-span-7 rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
+        <section className="md:col-span-7 rounded-xl border bg-white shadow-sm p-3 flex flex-col gap-2 md:min-h-0">
           <div className="flex items-center justify-between gap-2">
             <span className="font-bold text-lg">お預かり</span>
             <div className="flex items-center gap-2">
@@ -208,20 +208,20 @@ export default function RegisterClient({
                 type="button"
                 onClick={backspaceReceived}
                 aria-label="お預かり金額を1桁削除"
-                className="w-12 h-12 rounded-lg border bg-white text-slate-500 text-xl hover:border-slate-400"
+                className="w-11 h-11 rounded-lg border bg-white text-slate-500 text-xl hover:border-slate-400"
               >
                 ⌫
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5 flex-1 md:min-h-0">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((n) => (
               <button
                 key={n}
                 type="button"
                 onClick={() => pressReceivedDigit(String(n))}
-                className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+                className="min-h-14 rounded-lg border bg-white text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
               >
                 {n}
               </button>
@@ -229,33 +229,33 @@ export default function RegisterClient({
             <button
               type="button"
               onClick={clearReceived}
-              className="rounded-lg border bg-white py-5 text-xl font-semibold text-rose-600 hover:border-rose-400 active:scale-[0.98] transition"
+              className="min-h-14 rounded-lg border bg-white text-xl font-semibold text-rose-600 hover:border-rose-400 active:scale-[0.98] transition"
             >
               C
             </button>
             <button
               type="button"
               onClick={() => pressReceivedDigit("0")}
-              className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+              className="min-h-14 rounded-lg border bg-white text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
             >
               0
             </button>
             <button
               type="button"
               onClick={() => pressReceivedDigit("00")}
-              className="rounded-lg border bg-white py-5 text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
+              className="min-h-14 rounded-lg border bg-white text-2xl font-semibold tabular-nums hover:border-slate-400 active:scale-[0.98] transition"
             >
               00
             </button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {QUICK_CASH_AMOUNTS.map((amount) => (
               <button
                 key={amount}
                 type="button"
                 onClick={() => setReceivedAmount(amount)}
-                className="flex-1 rounded-lg border bg-white py-2 text-sm hover:border-slate-400"
+                className="flex-1 rounded-lg border bg-white py-1.5 text-sm hover:border-slate-400"
               >
                 ¥{amount.toLocaleString()}
               </button>
@@ -263,17 +263,17 @@ export default function RegisterClient({
             <button
               type="button"
               onClick={() => setReceivedAmount(totalAmount)}
-              className="flex-1 rounded-lg border bg-white py-2 text-sm hover:border-slate-400"
+              className="flex-1 rounded-lg border bg-white py-1.5 text-sm hover:border-slate-400"
             >
               ぴったり
             </button>
           </div>
-          <div className="flex items-center justify-between text-base">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-slate-600">お釣り</span>
             {changeAmount !== null && changeAmount >= 0 ? (
-              <span className="font-bold text-xl tabular-nums">¥{changeAmount.toLocaleString()}</span>
+              <span className="font-bold text-lg tabular-nums">¥{changeAmount.toLocaleString()}</span>
             ) : (
-              <span className="text-rose-700 font-bold text-xl tabular-nums">
+              <span className="text-rose-700 font-bold text-lg tabular-nums">
                 {changeAmount !== null ? `¥${Math.abs(changeAmount).toLocaleString()} 不足` : "-"}
               </span>
             )}
@@ -282,68 +282,58 @@ export default function RegisterClient({
       </div>
 
       {/* カート明細・札番号・会計確定: 下段に全幅で表示 */}
-      <section className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
-        <h2 className="font-bold">カート</h2>
+      <section className="rounded-xl border bg-white shadow-sm p-3 flex flex-col gap-1.5 md:shrink-0">
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="font-bold">カート</span>
+          <span className="text-slate-500">{totalCount}点</span>
+          <span className="font-bold tabular-nums">合計 ¥{totalAmount.toLocaleString()}</span>
+        </div>
 
-        <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
+        <div className="flex flex-col gap-1 max-h-24 overflow-y-auto">
           {lines.map((l) => (
-            <div key={l.productId} className="flex flex-col gap-1 border-b pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="font-medium truncate">{l.name}</div>
-                <button
-                  onClick={() => removeLine(l.productId)}
-                  aria-label={`${l.name}をカートから削除`}
-                  className="shrink-0 w-6 h-6 rounded text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="flex items-center gap-1 text-sm">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  step={1}
-                  value={l.quantity}
-                  onChange={(e) => setLineQuantity(l.productId, e.target.value)}
-                  aria-label={`${l.name}の数量`}
-                  className="w-14 border rounded px-1 py-1 text-center tabular-nums"
-                />
-                <span className="text-slate-400">個 ×</span>
-                <span className="text-slate-500">¥</span>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  step={100}
-                  value={l.unitPrice}
-                  onChange={(e) => setLineUnitPrice(l.productId, e.target.value)}
-                  aria-label={`${l.name}の単価`}
-                  className="w-20 border rounded px-1 py-1 text-right tabular-nums"
-                />
-                <span className="ml-auto font-semibold tabular-nums">
-                  ¥{(l.unitPrice * l.quantity).toLocaleString()}
-                </span>
-              </div>
+            <div key={l.productId} className="flex items-center gap-1 text-sm border-b pb-1">
+              <div className="font-medium truncate w-24 shrink-0">{l.name}</div>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                value={l.quantity}
+                onChange={(e) => setLineQuantity(l.productId, e.target.value)}
+                aria-label={`${l.name}の数量`}
+                className="w-12 border rounded px-1 py-0.5 text-center tabular-nums"
+              />
+              <span className="text-slate-400">個 ×¥</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={100}
+                value={l.unitPrice}
+                onChange={(e) => setLineUnitPrice(l.productId, e.target.value)}
+                aria-label={`${l.name}の単価`}
+                className="w-16 border rounded px-1 py-0.5 text-right tabular-nums"
+              />
+              <span className="ml-auto font-semibold tabular-nums">
+                ¥{(l.unitPrice * l.quantity).toLocaleString()}
+              </span>
+              <button
+                onClick={() => removeLine(l.productId)}
+                aria-label={`${l.name}をカートから削除`}
+                className="shrink-0 w-6 h-6 rounded text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+              >
+                ×
+              </button>
             </div>
           ))}
           {lines.length === 0 && (
-            <div className="text-sm text-slate-500 py-4 text-center">商品を選択してください</div>
+            <div className="text-sm text-slate-500 py-1 text-center">商品を選択してください</div>
           )}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-slate-600">
-          <span>商品点数</span>
-          <span className="tabular-nums">{totalCount}点</span>
-        </div>
-        <div className="flex items-center justify-between text-lg font-bold">
-          <span>合計</span>
-          <span className="tabular-nums">¥{totalAmount.toLocaleString()}</span>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium">札番号</span>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium shrink-0">札番号</span>
+          <div className="grid grid-cols-10 gap-1 flex-1">
             {TAG_NUMBERS.map((n) => {
               const disabled = usedTags.has(n) && tagNumber !== n;
               const selected = tagNumber === n;
@@ -353,7 +343,7 @@ export default function RegisterClient({
                   type="button"
                   onClick={() => setTagNumber(n)}
                   disabled={disabled}
-                  className={`rounded-lg border py-2 text-sm font-semibold tabular-nums ${
+                  className={`rounded-lg border py-1 text-sm font-semibold tabular-nums ${
                     selected
                       ? "bg-slate-900 text-white border-slate-900"
                       : disabled
@@ -371,14 +361,14 @@ export default function RegisterClient({
         <button
           onClick={checkout}
           disabled={lines.length === 0 || tagNumber === null || cashShortfall || submitting}
-          className="bg-slate-900 text-white rounded-lg py-3 font-semibold disabled:opacity-50"
+          className="bg-slate-900 text-white rounded-lg py-2 font-semibold disabled:opacity-50"
         >
           {submitting ? "処理中..." : "会計確定"}
         </button>
 
         {err && <div className="text-rose-700 text-sm">{err}</div>}
         {lastTagNumber !== null && (
-          <div className="text-emerald-700 text-sm bg-emerald-50 rounded p-2">
+          <div className="text-emerald-700 text-sm bg-emerald-50 rounded p-1.5">
             札 {lastTagNumber} 番の注文を厨房に送信しました
           </div>
         )}
